@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metall FM</title>
+  <link rel="icon" type="image/png" href="pictures/favicon.png">
+
+  <style>
+    body {
+      margin: 0;
+      background: #fff;
+    }
+    .scroll-container {
+  position: absolute;
+  left: 14px;
+  top: 218px;
+  width: 330px;
+  height: 200px;
+  background: #D9D9D9;
+  border-radius: 25px;
+  overflow: hidden;
+}
+
+/* теперь стрелка стоит фиксировано внутри контейнера */
+.scroll-pointer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.scroll-wrapper, #frequency-display, #wave {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+/* треугольник */
+.triangle {
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 25px solid red;
+}
+
+/* линия вниз */
+.line {
+  width: 3px;
+  height: 160px;
+  background-color: red;
+}
+
+/* скроллер */
+.scroll-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  white-space: nowrap;
+  padding-top: 35px; /* если нужно отодвинуть шкалу вниз */
+}
+
+/* трек со шкалой */
+.scroll-track {
+  position: relative;
+  width: 1705px;
+  height: 100%;
+}
+
+
+    .tick {
+      position: absolute;
+      bottom: 0;
+      width: 3px;
+      background: black;
+    }
+    .tick.small { height: 10px; }
+    .tick.medium { height: 25px; }
+    .tick.big { height: 50px; }
+    .tick-label {
+      position: absolute;
+      top: 55px;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+
+    <!-- 🔧 Параметры кнопка -->
+    <div id="param-btn" style="width: 50px; height: 50px; left: 9px; top: 10px; position: absolute; background: #D9D9D9; border-radius: 9999px; border: 1px #007BFF solid; cursor: pointer; z-index: 10;"></div>
+    <img src="pictures/paramt.png" style="width: 35px; height: 35px; left: 17px; top: 18px; position: absolute; z-index: 10; pointer-events: none;" />
+  
+    <!-- 🛠️ Меню параметров -->
+    <div id="settings-menu" style="width: 240px; height: 385px; position: absolute; top: 0; left: -260px; background: #C9C9C9; border-top-right-radius: 50px; border-bottom-right-radius: 50px; z-index: 9998; transition: left 0.4s ease;">
+      <div style="width: 220px; height: 60px; left: 12px; top: 12px; position: absolute; background: #D9D9D9; border-radius: 50px"></div>
+      <div style="left: 42px; top: 30px; position: absolute; color: black; font-size: 20px; font-family: Inter;">Параметры</div>
+      <img src="pictures/paramt.png" id="close-settings" style="width: 35px; height: 35px; left: 179px; top: 25px; position: absolute; cursor: pointer;" />
+      <img src="pictures/poten.png" style="width: 25px; height: 25px; left: 14px; top: 98px; position: absolute" />
+      <div id="btn-favorites" style="left: 47px; top: 100px; position: absolute; font-size: 20px; font-family: Inter; cursor: pointer;">Избранное</div>
+      <img src="pictures/Save_black-1024.webp" style="width: 25px; height: 25px; left: 13px; top: 155px; position: absolute" />
+      <div id="btn-saved" style="left: 45px; top: 143px; position: absolute; font-size: 20px; font-family: Inter; cursor: pointer;">Сохраненные <br/>волны</div>
+      <img src="pictures/server-1024.webp" style="width: 25px; height: 25px; left: 14px; top: 208px; position: absolute" />
+      <div id="btn-memory" style="left: 47px; top: 208px; position: absolute; font-size: 20px; font-family: Inter; cursor: pointer;">Память</div>
+      <img src="pictures/folen.png" style="width: 25px; height: 25px; left: 14px; top: 258px; position: absolute" />
+      <div id="btn-repair" style="left: 49px; top: 259px; position: absolute; font-size: 20px; font-family: Inter; cursor: pointer;">Починка</div>
+      <img src="pictures/Remove-bg.ai_1747631518423.png" style="width: 25px; height: 25px; left: 14px; top: 305px; position: absolute" />
+      <div id="btn-about" style="left: 47px; top: 297px; position: absolute; font-size: 20px; font-family: Inter; cursor: pointer;">Благодарить <br/>Создателя</div>
+      <div style="left: 13px; top: 364px; position: absolute; font-size: 14px; font-family: Inter;">V3.0 Je t’aime</div>
+    </div>
+  </div>
+
+
+
+
+  <div style="width: 360px; height: 720px; position: relative; background: white; overflow: hidden">
+
+    <div id="signal-search" style="
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 360px;
+  height: 720px;
+  background: rgba(255, 255, 255, 0.8); /* полупрозрачность */
+  backdrop-filter: blur(4px); /* лёгкое размытие задника */
+  z-index: 999;
+  display: none;
+">
+    
+  <div style="width: 300px; height: 300px; left: 30px; top: 193px; position: absolute; background: #B1CEED; border-radius: 25px; border: 1px #007BFF solid"></div>
+  <div id="resonance" style="left: 122px; top: 454px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400;">Резонанс: 0%</div>
+  <div style="width: 138px; left: 177px; top: 276px; position: absolute; text-align: center; color: black; font-size: 14px; font-family: Inter;">Поиск ближайших радио-сигналов в резонансе, воспроизводиться будут только найденный волны</div>
+  <div style="width: 270px; height: 50px; left: 45px; top: 204px; position: absolute; background: white; border-radius: 20px; border: 1px #007BFF solid"></div>
+  <div style="left: 79px; top: 218px; position: absolute; color: #007BFF; font-size: 20px; font-family: Inter;">Настройка Радио.......</div>
+  <div style="width: 120px; height: 120px; left: 45px; top: 266px; position: absolute; background: white; border-radius: 9999px; border: 1px #007BFF solid"></div>
+  <div style="left: 90px; top: 278px; position: absolute; text-align: center; color: black; font-size: 24px; font-family: Inter;">Hz</div>
+  <div style="left: 59px; top: 311px; position: absolute; text-align: center; color: black; font-size: 24px; font-family: Inter;">Поиск...</div>
+  <div style="width: 250px; height: 35px; left: 55px; top: 403px; position: absolute; background: white; border-radius: 25px; border: 1px #007BFF solid"></div>
+  <div id="loading-bar" style="width: 0px; height: 35px; left: 55px; top: 403px; position: absolute; background: #007BFF; border-radius: 25px"></div>
+  <div style="left: 152px; top: 383px; position: absolute; color: black; font-size: 15px; font-family: Inter;">Loading</div>
+</div>
+  
+  <div style="width: 50px; height: 50px; left: 9px; top: 10px; position: absolute; background: #D9D9D9; border-radius: 9999px; border: 1px #007BFF solid"></div>
+  <img style="width: 40px; height: 40px; left: 304px; top: 15px; position: absolute; border-radius: 9999px; border: 1px #007BFF solid" src="https://placehold.co/40x40" />
+  <div style="width: 170px; height: 70px; left: 93px; top: 439px; position: absolute; background: #D9D9D9; border-radius: 50px; border: 1px #007BFF solid"></div>
+<div id="power-btn" style="width: 170px; height: 170px; left: 95px; top: 529px; position: absolute; background: #D9D9D9; border-radius: 9999px; border: 1px #007BFF solid; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;">
+  <img src="pictures/power.png" style="width: 130px; height: 130px; pointer-events: none;" />
+</div>
+
+  <div id="search-btn" style="position: absolute; left: 64px; top: 10px; width: 286px; height: 50px; cursor: pointer;">
+  <div style="width: 100%; height: 100%; background: #D9D9D9; border-radius: 50px; border: 1px #007BFF solid;"></div>
+  <div style="position: absolute; left: 42px; top: 16px; color: rgba(0, 0, 0, 0.70); font-size: 16px; font-family: Inter; font-weight: 400;">Поиск новых волн</div>
+</div>
+
+  
+  <img style="width: 35px; height: 35px; left: 473px; top: 23px; position: absolute" src="https://placehold.co/35x35" />
+  <img style="width: 35px; height: 35px; left: 525px; top: 23px; position: absolute" src="https://placehold.co/35x35" />
+   <div style="width: 65px; height: 40px; left: 360px; top: 604px; position: absolute; transform: rotate(180deg); transform-origin: top left; background: #D9D9D9; border-top-right-radius: 25px; border-bottom-right-radius: 25px"></div>
+   <div style="width: 65px; height: 40px; left: 360px; top: 651px; position: absolute; transform: rotate(180deg); transform-origin: top left; background: #D9D9D9; border-top-right-radius: 25px; border-bottom-right-radius: 25px"></div>
+   <div style="width: 65px; height: 40px; left: 360px; top: 698px; position: absolute; transform: rotate(180deg); transform-origin: top left; background: #D9D9D9; border-top-right-radius: 25px; border-bottom-right-radius: 25px"></div>
+  
+  <div style="left: 316px; top: 576px; position: absolute; color: black; font-size: 15px; font-family: Inter; font-weight: 400; word-wrap: break-word">ENG</div>
+  <div style="left: 315px; top: 622px; position: absolute; color: black; font-size: 15px; font-family: Inter; font-weight: 400; word-wrap: break-word">РУС</div>
+  <div style="left: 315px; top: 670px; position: absolute; color: black; font-size: 15px; font-family: Inter; font-weight: 400; word-wrap: break-word">ҚАЗ</div>
+   <img style="width: 35px; height: 35px; left: 69px; top: 18px; position: absolute" src="pictures/Vector-S.png" />
+  <img style="width: 35px; height: 35px; left: 17px; top: 18px; position: absolute" src="pictures/paramt.webp" />
+    <div id="frequency-display" style="left: 122px; top: 454px; position: absolute; color: black; font-size: 32px; font-family: Inter; font-weight: 400; word-wrap: break-word">
+  0.00 Hz
+</div>
+    <div style="width: 65px; height: 40px; left: 0px; top: 565px; position: absolute; background: #D9D9D9; border-top-right-radius: 25px; border-bottom-right-radius: 25px"></div>
+    <div style="left: 19px; top: 572px; position: absolute; color: black; font-size: 20px; font-family: Inter; font-weight: 400; word-wrap: break-word">Hz</div>
+    <div style="width: 65px; height: 40px; left: 0px; top: 611px; position: absolute; background: #D9D9D9; border-top-right-radius: 25px; border-bottom-right-radius: 25px"></div>
+    <div style="left: 10px; top: 619px; position: absolute; color: black; font-size: 20px; font-family: Inter; font-weight: 400; word-wrap: break-word">MHz</div>
+  <div style="width: 330px; height: 130px; left: 14px; top: 74px; position: absolute; background: #E6E6E6; border-radius: 15px"></div>
+<div id="status-text" style="width: 290px; height: 42px; left: 23px; top: 81px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word; transition: opacity 0.4s ease;">Сейчас играет: Радио отключено, нажмите кнопку чтобы включить</div>
+<div id="mmm-text" style="width: 300px; left: 25px; top: 119px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word"></div>
+
+
+  <div style="width: 330px; height: 200px; left: 14px; top: 218px; position: absolute; background: #D9D9D9; border-radius: 25px"></div>
+  <!-- Кнопка Пауза -->
+<div  style="width: 50px; height: 50px; left: 45px; top: 504px; position: absolute; background: #D9D9D9; border-radius: 25px"></div>
+<img id="pause-btn" style="width: 35px; height: 35px; left: 53px; top: 511px; position: absolute" src="pictures/possi.png" />
+
+<!-- Кнопка Воспроизвести -->
+<div  style="width: 50px; height: 50px; left: 265px; top: 504px; position: absolute; background: #D9D9D9; border-radius: 25px"></div>
+<img id="play-btn" style="width: 35px; height: 35px; left: 273px; top: 511px; position: absolute" src="pictures/audio-video-outline-play-1024.webp" />
+
+<div id="signal-search" style="
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 360px;
+  height: 720px;
+  background: white;
+  z-index: 999; /* поверх всего */
+  display: none; /* скрыто по умолчанию */
+">
+  <div style="width: 300px; height: 300px; left: 30px; top: 193px; position: absolute; background: #B1CEED; border-radius: 25px; border: 1px #007BFF solid"></div>
+  <div id="resonance" style="left: 122px; top: 454px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400;">Резонанс: 0%</div>
+  <div style="width: 138px; left: 177px; top: 276px; position: absolute; text-align: center; color: black; font-size: 14px; font-family: Inter;">Поиск ближайших радио-сигналов в резонансе, воспроизводиться будут только найденный волны</div>
+  <div style="width: 270px; height: 50px; left: 45px; top: 204px; position: absolute; background: white; border-radius: 20px; border: 1px #007BFF solid"></div>
+  <div style="left: 79px; top: 218px; position: absolute; color: #007BFF; font-size: 20px; font-family: Inter;">Настройка Радио.......</div>
+  <div style="width: 120px; height: 120px; left: 45px; top: 266px; position: absolute; background: white; border-radius: 9999px; border: 1px #007BFF solid"></div>
+  <div style="left: 90px; top: 278px; position: absolute; text-align: center; color: black; font-size: 24px; font-family: Inter;">Hz</div>
+  <div style="left: 59px; top: 311px; position: absolute; text-align: center; color: black; font-size: 24px; font-family: Inter;">Поиск...</div>
+  <div style="width: 250px; height: 35px; left: 55px; top: 403px; position: absolute; background: white; border-radius: 25px; border: 1px #007BFF solid"></div>
+  <div id="loading-bar" style="width: 0px; height: 35px; left: 55px; top: 403px; position: absolute; background: #007BFF; border-top-left-radius: 25px; border-bottom-left-radius: 25px"></div>
+  <div style="left: 152px; top: 383px; position: absolute; color: black; font-size: 15px; font-family: Inter;">Loading</div>
+</div>
+
+</div>
+
+    <div class="scroll-container">
+
+      <!-- 🔴 Фиксированная стрелка -->
+  <div style="
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+  ">
+    <!-- 🔺 Треугольник -->
+    <div style="
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 25px solid red;
+    "></div>
+
+    <!-- 📏 Красная линия -->
+    <div style="
+      width: 3px;
+      height: 155px;
+      background-color: red;
+      margin-top: 0;
+    "></div>
+  </div>
+<div class="scroll-wrapper">
+  <div class="scroll-track" id="scrollTrack">
+ <div style="position: absolute; bottom: 0; width: 100%; height: 100%; overflow-x: auto;">
+    <div style="width: 1704px; height: 114px; position: relative; margin-top: 50px;">
+      <div style="width: 1704px; height: 114px; position: relative">
+  <div class="medium" style="width: 50px; height: 0px; left: 372px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 336px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="medium" style="width: 25px; height: 0px; left: 348px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 360px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 384px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 396px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 408px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 324px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 420px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 336px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 348px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 360px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 276px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 240px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 252px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 264px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 288px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 300px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 312px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 228px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 240px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 252px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 264px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 180px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 144px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 156px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 168px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 132px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 144px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 156px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 168px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 192px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 204px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 216px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 192px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 204px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 216px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 84px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 48px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 60px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 72px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 36px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 48px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 60px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 72px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 0px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 12px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 24px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 0px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 12px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 24px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 96px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 108px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 120px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 96px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 108px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 120px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 468px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 480px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 492px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 504px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 516px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 432px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 444px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 456px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 564px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 660px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 576px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 672px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 588px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 600px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 636px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 624px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 648px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 684px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 696px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 612px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 708px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 756px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 768px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 732px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 720px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 744px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 780px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 792px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 804px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 852px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 864px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 828px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 816px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 840px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 876px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 888px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 900px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 948px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 960px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 924px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 912px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 936px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 972px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 984px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 996px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 1044px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1056px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1020px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1008px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1032px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1068px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1080px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 1092px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 1140px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1152px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1116px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1104px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1128px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1164px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1176px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 1188px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 1236px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1248px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1212px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1200px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1224px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1260px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1272px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 1284px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 1332px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1344px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1308px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1296px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1320px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1356px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1368px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 1380px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 1428px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1440px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1404px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1392px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1416px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1452px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1464px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1488px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1500px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1512px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 1476px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 1524px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1536px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1548px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1560px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 1572px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1584px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1596px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1608px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1680px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1692px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1704px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="medium" style="width: 50px; height: 0px; left: 1620px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1632px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1644px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 1656px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 1668px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 528px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 540px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="small" style="width: 25px; height: 0px; left: 552px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 2px black solid; outline-offset: -1px"></div>
+  <div class="big" style="width: 90px; height: 0px; left: 516px; top: 90px; position: absolute; transform: rotate(-90deg); transform-origin: top left; outline: 3px black solid; outline-offset: -1.50px"></div>
+  <div style="left: 300px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">55.00</div>
+  <div style="left: 590px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">95.00</div>
+  <div style="left: 494px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">78.00</div>
+  <div style="left: 683px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">112.00</div>
+  <div style="left: 778px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">136.00</div>
+  <div style="left: 399px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">61.00</div>
+  <div style="left: 873px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">202.00</div>
+  <div style="left: 1065px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">244.00</div>
+  <div style="left: 1161px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">245.00</div>
+  <div style="left: 1449px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">256.00</div>
+  <div style="left: 969px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">239.00</div>
+  <div style="left: 1353px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">252.00</div>
+  <div style="left: 206px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">25.00</div>
+  <div style="left: 1257px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">249.00</div>
+  <div style="left: 1547px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">257.00</div>
+  <div style="left: 1643px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">301.00</div>
+  <div style="left: 21px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">1.00</div>
+  <div style="left: 115px; top: 95px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">5.00</div>
+
+
+</div>
+</div>
+  </div>
+</div>
+</div>   
+    </div>
+  </div>
+
+<audio id="radio-player" src="" preload="auto"></audio>
+
+<script>
+  const paramBtn = document.getElementById("param-btn");
+  const settingsMenu = document.getElementById("settings-menu");
+  const closeSettings = document.getElementById("close-settings");
+
+  // 🔁 Меню параметров: открытие и закрытие
+  paramBtn.addEventListener("click", () => {
+    settingsMenu.style.left = "0px"; // показать меню
+  });
+
+  closeSettings.addEventListener("click", () => {
+    settingsMenu.style.left = "-260px"; // скрыть меню
+  });
+
+  // 🔁 Переходы
+  document.getElementById("btn-favorites").addEventListener("click", () => {
+    window.location.href = "favorites.html";
+  });
+
+  document.getElementById("btn-saved").addEventListener("click", () => {
+    window.location.href = "saved.html";
+  });
+
+  document.getElementById("btn-memory").addEventListener("click", () => {
+    window.location.href = "memory.html";
+  });
+
+  document.getElementById("btn-about").addEventListener("click", () => {
+    window.location.href = "about.html";
+  });
+
+  // 🔧 Починка = сброс
+  document.getElementById("btn-repair").addEventListener("click", () => {
+    if (typeof powerBtn !== 'undefined') {
+      if (radioOn) {
+        powerBtn.click(); // выключить
+        setTimeout(() => powerBtn.click(), 150); // и включить заново
+      } else {
+        powerBtn.click(); // просто включить
+      }
+    }
+
+    settingsMenu.style.left = "-260px"; // закрыть меню
+  });
+</script>
+
+<script>
+// ...весь предыдущий код остаётся без изменений...
+
+const podcastMoments = [
+  { start: 0, end: 30, text: "🎵 Подкаст начнется через 30 секунд, сейчас послушайте музыку Happy Nation" },
+  { start: 30, end: 42, text: "🎙️ Этот подкаст создан при поддержке Великого Отца Создателя и ChatGPT. Приятного прослушивания" },
+  { start: 42, end: 69, text: "⚠️ ДИСКЛЕЙМЕР" },
+  { start: 68, end: 80, text: "🎤 Бекжан: Welcome to LAWS OF THE SHADOW,\nWhere the street meets the law,\nAnd the truth walks a fine line between right and wrong." },
+  { start: 80, end: 90, text: "🎤 Бекжан: Today we’re diving deep —\nNot into how to break the law,\nBut into how the law gets broken — legally." },
+  { start: 90, end: 96, text: "🎤 Бекжан: And who better to discuss this\nthan our legendary guests:" },
+  { start: 96, end: 111, text: "🎤 Бекжан: Please welcome\nThe Great Father Creator, Philosopher, Spiritual Healer, Programmer of the Matrix — Құттыбаев Ерасыл." },
+  { start: 111, end: 122, text: "🎤 Бекжан: And beside him —\nDatabase Mastermind, Silent Strategist, and the Watcher of Systems — Елеусизов Аян." },
+  { start: 122, end: 130, text: "🎤 Бекжан: Gentlemen, first question.\nIs it possible to do something illegal... legally?" },
+  { start: 130, end: 140, text: "🎤 ВОС: Depends who you are.\nIf you’re poor — it’s crime.\nIf you’re rich — it’s business.\nIf you’re smart — it’s strategy." },
+];
+
+setInterval(() => {
+  if (currentFrequency === "202.00" && !audio.paused) {
+    const currentTime = audio.currentTime;
+    const match = podcastMoments.find(m => currentTime >= m.start && currentTime < m.end);
+    if (match) {
+      podcastContent.textContent = match.text;
+    }
+  }
+}, 500);
+</script>
+
+<script>
+const scrollWrapper = document.querySelector(".scroll-wrapper");
+const display = document.getElementById("frequency-display");
+const audio = document.getElementById("radio-player");
+const wave = document.getElementById("wave");
+const pauseBtn = document.getElementById("pause-btn");
+const playBtn = document.getElementById("play-btn");
+const powerBtn = document.getElementById("power-btn");
+const statusText = document.getElementById("status-text");
+const signalSearch = document.getElementById("signal-search");
+const resonanceText = document.getElementById("resonance");
+const loadingBar = document.getElementById("loading-bar");
+const mmmText = document.getElementById("mmm-text");
+
+const bigStep = 96;
+const firstBigLeft = 50;
+
+const frequencies = [
+  "1.00", "5.00", "25.00", "55.00", "61.00", "78.00", "95.00",
+  "112.00", "136.00", "202.00", "239.00", "244.00", "245.00",
+  "249.00", "252.00", "256.00", "257.00", "301.00"
+];
+
+const trackInfo = {
+  "5.00": "Song - Dead Inside Адлин 2:05",
+  "25.00": "Song - Танцы под луной Lx24 3:21",
+  "55.00": "Song - Зачем 5staFamily Remix 1:52",
+  "61.00": "Song - Ана Sadraddin 3:14",
+  "78.00": "Song - Вместе Мы 5staFamily Remix 2:03",
+  "95.00": "Funk - Nada De Nada 1:08",
+  "112.00": "Song - Jauap bar ma Sadraddin 2:36",
+  "136.00": "Song - Я Украду MC Doni feat. Сати Казанова 3:36",
+  "202.00": "Podcast - Закон в тени ВОС-tm 9:23",
+  "239.00": "Song - Царица ANNA ASTI 3:35",
+  "244.00": "Song - Фото со звездой Lida 2:02",
+  "245.00": "Song - Если ты меня не любишь Егор Крид & MOLLY 3:26",
+  "249.00": "Song - En Nuit VideoClub 3:42",
+  "252.00": "Song - МакSим Знаешь ли ты 4:03",
+  "256.00": "Song - Если тебе будет грустно Rauf & Faik, NILETTO 3:11",
+  "257.00": "Song - Cartier RaiM 2:19",
+  "301.00": "Song - Колыбельная Rauf & Faik 3:53",
+};
+
+let currentFrequency = null;
+let fadeInterval = null;
+let isManualPaused = false;
+let radioOn = false;
+let isSearching = false;
+let mmmInterval = null;
+
+function fadeIn(el) {
+  el.style.opacity = 0;
+  el.style.display = "block";
+  setTimeout(() => {
+    el.style.transition = "opacity 0.5s ease";
+    el.style.opacity = 1;
+  }, 10);
+}
+function fadeOut(el) {
+  el.style.transition = "opacity 0.5s ease";
+  el.style.opacity = 0;
+  setTimeout(() => {
+    el.style.display = "none";
+  }, 500);
+}
+
+function fadeOutAudio(callback) {
+  if (fadeInterval) clearInterval(fadeInterval);
+  fadeInterval = setInterval(() => {
+    if (audio.volume > 0.05) {
+      audio.volume -= 0.05;
+    } else {
+      clearInterval(fadeInterval);
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = 1;
+      if (wave) wave.style.display = "none";
+      if (callback) callback();
+    }
+  }, 50);
+}
+
+function runMMM() {
+  if (!mmmText) return;
+  const segments = [
+    { start: 0, end: 30, text: "Подкаст начнется через 30 секунд, сейчас послушайте музыку Happy Nation" },
+    { start: 30, end: 42, text: "В ролях: <br>Спикер — <b>Алмасұлы Бекжан</b><br>Гость1 — <b>ВОС (Құттыбаев Ерасыл)</b><br>Гость2 — <b>Елеусизов Аян</b>"},
+    { start: 42, end: 69, text: "В ролях: <br>Спикер — <b>Алмасұлы Бекжан</b><br>Гость1 — <b>ВОС (Құттыбаев Ерасыл)</b><br>Гость2 — <b>Елеусизов Аян</b>" },
+    { start: 68, end: 80, text: "Бекжан: Welcome to LAWS OF THE SHADOW,\nWhere the street meets the law,\nAnd the truth walks a fine line between right and wrong." },
+    { start: 80, end: 90, text: "Бекжан: Today we’re diving deep —\nNot into how to break the law,\nBut into how the law gets broken — legally." },
+    { start: 90, end: 96, text: "Бекжан: And who better to discuss this\nthan our legendary guests:" },
+    { start: 96, end: 111, text: "Бекжан: Please welcome\nThe Great Father Creator, Philosopher, Spiritual Healer, Programmer of the Matrix — Құттыбаев Ерасыл." },
+    { start: 111, end: 122, text: "Бекжан: And beside him —\nDatabase Mastermind, Silent Strategist, and the Watcher of Systems — Елеусизов Аян." },
+    { start: 122, end: 130, text: "Бекжан: Gentlemen, first question.\nIs it possible to do something illegal... legally?" },
+    { start: 130, end: 135, text: "ВОС: Depends who you are.\nIf you’re poor — it’s crime.\nIf you’re rich — it’s business.\nIf you’re smart — it’s strategy." },
+    { start: 143, end: 159, text: "Аян: Everything illegal is legal\n— if it has paperwork.\nA brothel becomes a spa.\nDrug selling becomes alternative medicine.\nThe system doesn’t care what you do —\nOnly how well you report it." },
+    { start: 160, end: 165, text: "Мансур: So, how do people hide criminal activity behind legal masks?" },
+    { start: 165, end: 179, text: "ВОС: Step one — registration.\nOpen an LLC, get a license, pay taxes.\nSuddenly, you’re not a criminal — you’re a CEO." },
+    { start: 179, end: 191, text: "Аян: Step two — language.\nDon’t say “drugs” — say “herbal products.”\nDon’t say “prostitute” — say “model & escort.”\nIt’s not a gang — it’s a team." },
+    { start: 192, end: 198, text: "Бекжан: But how do they avoid prison?\nDon’t the police see it?" },
+    { start: 198, end: 209, text: "ВОС: The system isn’t blind.\nIt’s just selectively silent.\nIf you pay, you play." },
+    { start: 209, end: 220, text: "Аян: It’s not about being honest.\nIt’s about being untouchable.\nLaw isn’t the sword — it’s the shield\nfor those who know how to wield it." },
+    { start: 221, end: 225, text: "Мансур: So what’s the secret behind these “legal crimes”?" },
+    { start: 225, end: 242, text: "ВОС: Simple.\nDon’t hide from the system —\nBecome part of it.\nThe moment you pay taxes, you become legit,\neven if your product is sin." },
+    { start: 242, end: 251, text: "Аян: And the truth is,\npeople trust paperwork more than people.\nYour face can lie,\nbut your invoice looks honest." },
+    { start: 251, end: 256, text: "Бекжан: So tell the audience — what’s the lesson here?" },
+    { start: 256, end: 272, text: "ВОС: Never assume justice means fairness.\nJustice is a game.\nAnd in every game — the one who reads the rules wins." },
+    { start: 272, end: 283, text: "Аян: Stay clean, but don’t stay blind.\nBusiness isn’t just about ideas —\nIt’s about survival in a world\nwhere even sin wears a suit." },
+    { start: 283, end: 288, text: "Мансур: Let’s be real.\nYou think the system doesn’t see crimes?" },
+    { start: 288, end: 304, text: "ВОС: It sees everything.\nIt’s not blind —\nIt’s just wearing mirrored sunglasses.\nSo when it looks at crime —\nit sees itself." },
+    { start: 304, end: 311, text: "Аян: There are no clean hands at the top.\nPower comes with blood,\nand blood gets washed with laws." },
+    { start: 311, end: 317, text: "Бекжан: Tell me the truth.\nCan someone in power kill — and walk free?" },
+    { start: 317, end: 333, text: "ВОС: He doesn’t need to pull the trigger.\nHe signs a paper.\nHe whispers a name.\nHe delays an ambulance.\nHe erases a file.\nAnd just like that —\nsomeone disappears." },
+    { start: 334, end: 340, text: "Аян: And when someone asks,\nthe answer is silence.\nBecause silence... is well paid." },
+    { start: 341, end: 345, text: "Мансур: They don’t live on their salary, do they?" },
+    { start: 345, end: 363, text: "ВОС: Of course not.\nA government job is just a suit.\nThe real money flows through side doors —\nDrugs. Land. Tenders.\nProxies. Shell companies.\nAnd nobody checks,\nbecause everyone’s in on it." },
+    { start: 364, end: 375, text: "Аян: And if you say something?\nYou disappear.\nNot always with a bullet.\nSometimes... with a transfer,\na scandal,\nor just no signal." },
+    { start: 376, end: 379, text: "Бекжан: So what's left for the people?" },
+    { start: 379, end: 394, text: "ВОС: Know the truth.\nPlay smart.\nDon’t worship the system —\ndecode it.\nBecause when you see how the game is rigged,\nyou stop being a pawn." },
+    { start: 395, end: 407, text: "Аян: Just remember this:\nThey build prisons for people like us —\nBut they build palaces for people like them.\nSame cement.\nDifferent future." },
+    { start: 408, end: 414, text: "Мансур: Let’s talk about money.\nHow do they take dirty cash — and make it look innocent?" },
+    { start: 414, end: 431, text: "ВОС: It’s called money laundering —\nbut it’s more like money baptizing.\nYou take sin,\nwrap it in a company,\nbaptize it through fake contracts,\nwash it in real estate,\nand praise it as “foreign investment”." },
+    { start: 431, end: 441, text: "Аян: You sell drugs —\nthen build a “charity”.\nYou steal —\nthen open a “business center”.\nYou kill —\nand name it “security reform.”" },
+    { start: 442, end: 450, text: "Бекжан: What about Kazakhstan’s KNB?\nThe Anti-Corruption Agency?\nAren’t they supposed to stop this?" },
+    { start: 450, end: 465, text: "ВОС: KNB sees everything.\nAntikor hears everything.\nBut their vision — has a price.\nAnd their silence —\ncomes with a connection." },
+    { start: 465, end: 474, text: "Аян: You think they didn’t notice\nthose mansions,\nthose cars,\nthose weddings worth a million dollars?" },
+    { start: 474, end: 478, text: "Бекжан: So why no arrests?" },
+    { start: 478, end: 493, text: "ВОС: Because there’s no “them” and “us”.\nIt’s one big table.\nIf you don’t have a chair —\nyou’re not eating.\nAnd if you don’t have connections —\nyou’re just decoration." },
+    { start: 493, end: 504, text: "Аян: Without high-level ties,\nwithout clan loyalty,\nwithout someone pulling your name through corridors —\nyou can’t climb." },
+    { start: 504, end: 515, text: "ВОС: Work hard?\nDream big?\nBe honest?\nThat’s for fairy tales.\nIn the real world —\naccess beats talent." },
+    { start: 516, end: 522, text: "Мансур: So we live in a country where\njustice wears a mask —\nand criminals wear medals?" },
+    { start: 522, end: 530, text: "ВОС: Welcome to reality.\nThis is not a bug in the system.\nIt is the system." },
+    { start: 532, end: 544, text: "Бекжан: This was LAWS OF THE SHADOW.\nWe didn’t tell you to fight.\nWe told you to see.\nBecause when you see clearly —\nyou choose who to become." },
+    { start: 545, end: 552, text: "Stay smart.\nStay clean.\nOr stay dangerous." },
+    { start: 552, end: 563, text: "THE END. Понравился ли подкаст и старание создателя?" },
+  ];
+
+  let lastText = "";
+  if (mmmInterval) clearInterval(mmmInterval);
+  mmmInterval = setInterval(() => {
+    if (currentFrequency !== "202.00") {
+      mmmText.textContent = "";
+      clearInterval(mmmInterval);
+      return;
+    }
+    const time = audio.currentTime;
+    const segment = segments.find(s => time >= s.start && time < s.end);
+    if (segment && segment.text !== lastText) {
+      mmmText.innerHTML = segment.text;
+      lastText = segment.text;
+    }
+  }, 1000);
+}
+
+
+function updateFrequencyDisplay() {
+  if (!radioOn || isManualPaused || isSearching) return;
+  const scrollLeft = scrollWrapper.scrollLeft;
+  const centerX = scrollLeft + scrollWrapper.offsetWidth / 2;
+  const index = Math.round((centerX - firstBigLeft) / bigStep);
+
+  if (index >= 0 && index < frequencies.length) {
+    const freq = frequencies[index];
+    display.textContent = freq + " Hz";
+
+    if (freq !== currentFrequency) {
+      currentFrequency = freq;
+      fadeOutAudio(() => {
+        audio.src = `audio/${freq}.mp3`;
+        audio.volume = 1;
+        audio.play().catch((e) => console.warn("Play error:", e));
+        if (wave) wave.style.display = "block";
+        const title = trackInfo[freq] || `Трек ${freq}`;
+        statusText.textContent = `Сейчас играет: ${title}`;
+        if (freq === "202.00") runMMM();
+      });
+    }
+  } else {
+    display.textContent = "--.-- Hz";
+    if (currentFrequency !== null) {
+      fadeOutAudio();
+      currentFrequency = null;
+    }
+  }
+}
+
+pauseBtn.addEventListener("click", () => {
+  if (currentFrequency === "13.00") {
+    const previousText = statusText.textContent;
+    statusText.textContent = "🚫 Это прямая трансляция, её нельзя ставить на паузу";
+    setTimeout(() => {
+      const info = secretFrequencies["13.00"];
+      statusText.textContent = `Обнаружена новая волна: ${info.title}`;
+    }, 4000);
+    return;
+  }
+  audio.pause();
+  isManualPaused = true;
+  statusText.textContent = "Сейчас играет: Трек на паузе";
+});
+
+playBtn.addEventListener("click", () => {
+  if (isManualPaused) {
+    isManualPaused = false;
+    if (audio.src && audio.paused) {
+      audio.play().catch(() => {});
+      if (currentFrequency && trackInfo[currentFrequency]) {
+        statusText.textContent = `Сейчас играет: ${trackInfo[currentFrequency]}`;
+      } else {
+        statusText.textContent = "Сейчас играет: Неизвестный трек";
+      }
+    } else {
+      updateFrequencyDisplay();
+    }
+  }
+});
+
+function startSignalSearch(callback) {
+  isSearching = true;
+  signalSearch.style.display = "block";
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress++;
+    loadingBar.style.width = `${(progress / 100) * 250}px`;
+    resonanceText.textContent = `Резонанс: ${progress}%`;
+    if (progress >= 100) {
+      clearInterval(interval);
+      signalSearch.style.display = "none";
+      isSearching = false;
+      if (callback) callback();
+    }
+  }, 200);
+}
+
+powerBtn.addEventListener("click", () => {
+  radioOn = !radioOn;
+  if (radioOn) {
+    startSignalSearch(() => {
+      statusText.textContent = "Сейчас играет: Настройте частоту скроллером внизу!";
+      fadeIn(scrollWrapper);
+      fadeIn(display);
+      scrollWrapper.scrollLeft = 0;
+      display.textContent = "1.00 Hz";
+      currentFrequency = null;
+      setTimeout(updateFrequencyDisplay, 200);
+    });
+  } else {
+    fadeOutAudio();
+    statusText.textContent = "Сейчас играет: Радио отключено, нажмите кнопку чтобы включить";
+    display.textContent = "0.00 Hz";
+    fadeOut(scrollWrapper);
+    fadeOut(display);
+    fadeOut(wave);
+    currentFrequency = null;
+  }
+  powerBtn.style.transform = "scale(0.9)";
+  setTimeout(() => powerBtn.style.transform = "scale(1)", 150);
+});
+
+scrollWrapper.addEventListener("scroll", updateFrequencyDisplay);
+
+const secretFrequencies = {
+  "13.00": {
+    title: "SCP Personnel Message – 1:55",
+    path: "audio/13.00.mp3"
+  }
+};
+
+const searchBtn = document.getElementById("search-btn");
+
+searchBtn.addEventListener("click", () => {
+  if (!radioOn || isSearching) return;
+  statusText.textContent = "🔍 Идёт поиск новых волн...";
+  setTimeout(() => {
+    const freq = "13.00";
+    const info = secretFrequencies[freq];
+    currentFrequency = freq;
+    display.textContent = freq + " Hz";
+    audio.src = info.path;
+    audio.volume = 1;
+    audio.play().catch(() => {});
+    statusText.textContent = `Обнаружена новая волна: ${info.title}`;
+    if (wave) wave.style.display = "block";
+  }, 2000);
+});
+</script>
+
+
+
+</body>
+</html>

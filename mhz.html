@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radio UI</title>
+</head>
+<body>
+    <div style="width: 360px; height: 720px; position: relative; background: white; overflow: hidden">
+  <div style="width: 286px; height: 50px; left: 64px; top: 10px; position: absolute; background: #D9D9D9; border-radius: 50px; border: 1px #007BFF solid"></div>
+  <div style="width: 50px; height: 50px; left: 9px; top: 10px; position: absolute; background: #D9D9D9; border-radius: 9999px; border: 1px #007BFF solid"></div>
+  <img style="width: 40px; height: 40px; left: 304px; top: 15px; position: absolute; border-radius: 9999px; border: 1px #007BFF solid" src="https://placehold.co/40x40" />
+  <div style="left: 106px; top: 26px; position: absolute; color: rgba(0, 0, 0, 0.70); font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">Поиск новых волн</div>
+  <img style="width: 35px; height: 35px; left: 473px; top: 23px; position: absolute" src="https://placehold.co/35x35" />
+  <img style="width: 35px; height: 35px; left: 525px; top: 23px; position: absolute" src="https://placehold.co/35x35" />
+  <img style="width: 35px; height: 35px; left: 69px; top: 18px; position: absolute" src="https://placehold.co/35x35" />
+  <img style="width: 35px; height: 35px; left: 17px; top: 18px; position: absolute" src="https://placehold.co/35x35" />
+  <div style="width: 50px; height: 50px; left: 9px; top: 10px; position: absolute; background: #D9D9D9; border-radius: 9999px; border: 1px #007BFF solid"></div>
+  <div style="width: 286px; height: 50px; left: 64px; top: 10px; position: absolute; background: #D9D9D9; border-radius: 50px; border: 1px #007BFF solid"></div>
+  <img style="width: 40px; height: 40px; left: 304px; top: 15px; position: absolute; border-radius: 9999px; border: 1px #007BFF solid" src="https://placehold.co/40x40" />
+  <img style="width: 35px; height: 35px; left: 17px; top: 18px; position: absolute" src="https://placehold.co/35x35" />
+  <img style="width: 35px; height: 35px; left: 69px; top: 18px; position: absolute" src="https://placehold.co/35x35" />
+  <div style="left: 106px; top: 26px; position: absolute; color: rgba(0, 0, 0, 0.70); font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">Поиск новых волн</div>
+  <div style="width: 227px; height: 104px; left: 66px; top: 104px; position: absolute; background: #D9D9D9; border-radius: 50px; border: 1px #007BFF solid"></div>
+  <div style="left: 125px; top: 127px; position: absolute; color: black; font-size: 48px; font-family: Inter; font-weight: 400; word-wrap: break-word">MHz</div>
+  <div style="width: 330px; height: 100px; left: 14px; top: 252px; position: absolute; background: #E6E6E6; border-radius: 15px"></div>
+  <div style="width: 318px; height: 97px; left: 29px; top: 263px; position: absolute; color: black; font-size: 16px; font-family: Inter; font-weight: 400; word-wrap: break-word">Функция мегагерца еще не проработана. Создатель, считает пока что не нужным. Поэтому это функция остается на Coming Soon....</div>
+<!-- 🔧 Параметры кнопка -->
+<div id="param-btn" style="width: 50px; height: 50px; left: 9px; top: 10px; position: absolute; background: #D9D9D9; border-radius: 9999px; border: 1px #007BFF solid; cursor: pointer; z-index: 10;"></div>
+<img src="pictures/paramt.png" style="width: 35px; height: 35px; left: 17px; top: 18px; position: absolute; z-index: 10; pointer-events: none;" />
+
+<!-- 🛠️ Меню параметров -->
+<div id="settings-menu" style="width: 240px; height: 385px; position: absolute; top: 0; left: -260px; background: #C9C9C9; border-top-right-radius: 50px; border-bottom-right-radius: 50px; z-index: 9998; transition: left 0.4s ease;">
+  <div style="width: 220px; height: 60px; left: 12px; top: 12px; position: absolute; background: #D9D9D9; border-radius: 50px"></div>
+  <div style="left: 42px; top: 30px; position: absolute; color: black; font-size: 20px; font-family: Inter;">Параметры</div>
+  <img src="pictures/paramt.png" id="close-settings" style="width: 35px; height: 35px; left: 179px; top: 25px; position: absolute; cursor: pointer;" />
+  <img src="pictures/poten.png" style="width: 25px; height: 25px; left: 14px; top: 98px; position: absolute" />
+  <div style="left: 47px; top: 100px; position: absolute; font-size: 20px; font-family: Inter;">Избранное</div>
+  <img src="pictures/Save_black-1024.webp" style="width: 25px; height: 25px; left: 13px; top: 155px; position: absolute" />
+  <div style="left: 45px; top: 143px; position: absolute; font-size: 20px; font-family: Inter;">Сохраненные <br/>волны</div>
+  <img src="pictures/server-1024.webp" style="width: 25px; height: 25px; left: 14px; top: 208px; position: absolute" />
+  <div style="left: 47px; top: 208px; position: absolute; font-size: 20px; font-family: Inter;">Память</div>
+  <img src="pictures/folen.png" style="width: 25px; height: 25px; left: 14px; top: 258px; position: absolute" />
+  <div style="left: 49px; top: 259px; position: absolute; font-size: 20px; font-family: Inter;">Починка</div>
+  <img src="pictures/Remove-bg.ai_1747631518423.png" style="width: 25px; height: 25px; left: 14px; top: 305px; position: absolute" />
+  <div style="left: 47px; top: 297px; position: absolute; font-size: 20px; font-family: Inter;">Благодарить <br/>Создателя</div>
+  <div style="left: 13px; top: 364px; position: absolute; font-size: 14px; font-family: Inter;">V3.0 Je t’aime</div>
+</div>
+</div>
+</div>
+</body>
+</html>
